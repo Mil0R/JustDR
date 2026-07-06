@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Ahrefs Domain Rating Badge",
+  "version": "1.0.0",
+  "description": "Click the icon to fetch the current tab's domain rating from Ahrefs and show it in the badge.",
+  "permissions": ["contextMenus", "storage", "tabs"],
+  "host_permissions": ["https://api.ahrefs.com/*"],
+  "icons": {
+    "16": "icons/ahrefs-16.png",
+    "32": "icons/ahrefs-32.png",
+    "48": "icons/ahrefs-48.png",
+    "128": "icons/ahrefs-128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/ahrefs-16.png",
+      "32": "icons/ahrefs-32.png"
+    },
+    "default_title": "Domain Rating"
+  }
+}
