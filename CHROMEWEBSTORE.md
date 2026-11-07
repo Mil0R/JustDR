@@ -1,14 +1,14 @@
 Single purpose
 
-Shows the current website's Ahrefs Domain Rating (DR) in the extension badge, either on demand or automatically when the user switches to or opens a tab.
+Shows the current website's Ahrefs Domain Rating (DR) in the extension badge, either on demand or automatically when the user switches to or opens a tab, with support for both DR3 and DR4 calculation models.
 
 Permission justifications
 
 `contextMenus`
-Used to provide a right-click menu on the extension icon so the user can enable or disable automatic DR lookup.
+Used to provide a right-click menu on the extension icon so the user can enable or disable automatic DR lookup and toggle between Domain Rating versions (DR3 and DR4).
 
 `storage`
-Used to save the user's Auto DR preference locally so the extension can remember whether automatic DR lookup is enabled.
+Used to save the user's Auto DR preference and chosen DR version (DR3 or DR4) locally.
 
 `tabs`
 Used to detect tab activation and page load completion, and to read the current tab URL so the extension can fetch the Ahrefs Domain Rating for that website.

@@ -1,0 +1,17 @@
+{
+  "name": "justdr",
+  "version": "1.1.0",
+  "description": "Chrome extension showing current website's Ahrefs Domain Rating (DR3 / DR4) in the action badge.",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "chrome-extension",
+    "ahrefs",
+    "domain-rating",
+    "dr3",
+    "dr4"
+  ],
+  "author": "",
+  "license": "ISC"
+}

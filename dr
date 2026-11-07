@@ -1,29 +1,46 @@
 #!/usr/bin/env node
 
-const [, , target] = process.argv;
+const [, , target, versionArg] = process.argv;
 
 if (!target) {
-  console.error("Usage: da <domain>");
+  console.error("Usage: dr <domain> [version (dr3|dr4)]");
   process.exit(1);
 }
 
 let parsedTarget;
 try {
-  parsedTarget = new URL(`https://${target}`).hostname;
+  const targetWithProtocol =
+    target.startsWith("http://") || target.startsWith("https://")
+      ? target
+      : `https://${target}`;
+  parsedTarget = new URL(targetWithProtocol).hostname;
 } catch {
   console.error(`Invalid domain: ${target}`);
   process.exit(1);
 }
 
+const version =
+  versionArg &&
+  (versionArg.toLowerCase() === "dr4" || versionArg.toLowerCase() === "dr3")
+    ? versionArg.toLowerCase()
+    : "dr3";
+
 const endpoint = new URL("https://api.ahrefs.com/v3/public/domain-rating-free");
 endpoint.searchParams.set("target", parsedTarget);
+endpoint.searchParams.set("version", version);
+
+const headers = {
+  accept: "application/json",
+  "user-agent": "dr-cli/0.1",
+};
+
+if (process.env.AHREFS_API_KEY) {
+  headers["authorization"] = `Bearer ${process.env.AHREFS_API_KEY}`;
+}
 
 try {
   const response = await fetch(endpoint, {
-    headers: {
-      "accept": "application/json",
-      "user-agent": "da-cli/0.1",
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -39,7 +56,9 @@ try {
     process.exit(1);
   }
 
-  console.log(Number.isInteger(domainRating) ? domainRating : String(domainRating));
+  console.log(
+    Number.isInteger(domainRating) ? domainRating : String(domainRating)
+  );
 } catch (error) {
   console.error(error instanceof Error ? error.message : "Request failed");
   process.exit(1);
