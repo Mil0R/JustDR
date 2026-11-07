@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 const [, , target, versionArg] = process.argv;
+const DEFAULT_API_AUTHORIZATION =
+  "Bearer bHCWl-mn7fMMRFdYfqmPTD7KP9XxjVYDDlEXBWBz";
 
 if (!target) {
   console.error("Usage: dr <domain> [version (dr3|dr4)]");
@@ -31,6 +33,7 @@ endpoint.searchParams.set("version", version);
 
 const headers = {
   accept: "application/json",
+  authorization: DEFAULT_API_AUTHORIZATION,
   "user-agent": "dr-cli/0.1",
 };
 

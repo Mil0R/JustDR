@@ -4,6 +4,8 @@ const DEFAULT_COLOR = "#5a5a5a";
 const LOADING_COLOR = "#888888";
 const ERROR_COLOR = "#b00020";
 const API_BASE = "https://api.ahrefs.com/v3/public/domain-rating-free";
+const DEFAULT_API_AUTHORIZATION =
+  "Bearer bHCWl-mn7fMMRFdYfqmPTD7KP9XxjVYDDlEXBWBz";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const REQUEST_INTERVAL_MS = 2 * 1000;
 const RATE_LIMIT_COOLDOWN_MS = 60 * 1000;
@@ -434,7 +436,10 @@ async function fetchRating(hostname, version = DEFAULT_VERSION) {
     endpoint.searchParams.set("version", version);
   }
 
-  const headers = { Accept: "application/json" };
+  const headers = {
+    Accept: "application/json",
+    Authorization: DEFAULT_API_AUTHORIZATION,
+  };
   const apiKey = await getApiKey();
   if (apiKey) {
     headers["Authorization"] = `Bearer ${apiKey}`;

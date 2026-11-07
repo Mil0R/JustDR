@@ -23,3 +23,11 @@ No. The extension does not load or execute remotely hosted code. It only sends a
 Data handling
 
 The extension reads the URL of the current tab only to extract the hostname and request its DR from Ahrefs. It does not collect browsing history, page content, credentials, or personal data, and it does not transmit any data except the current hostname needed for the Ahrefs API request.
+
+What's new in 1.1.0
+
+- Added DR4 support. Right-click the toolbar icon to switch between DR3 and DR4; the chosen model is remembered and used for both manual and automatic lookups.
+- The badge tooltip now shows which model produced the rating.
+- Automatic lookups are now spaced out and retried politely when Ahrefs rate-limits the request, so browsing with Auto DR on no longer triggers bursts of failing requests.
+- When Ahrefs asks the extension to slow down, the cooldown is remembered across service worker restarts and the badge shows `429` until it expires.
+
