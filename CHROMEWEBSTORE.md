@@ -8,7 +8,7 @@ Permission justifications
 Used to provide a right-click menu on the extension icon so the user can enable or disable automatic DR lookup and toggle between Domain Rating versions (DR3 and DR4).
 
 `storage`
-Used to save the user's Auto DR preference and chosen DR version (DR3 or DR4) locally.
+Used to save the user's Auto DR preference, chosen DR version (DR3 or DR4), and temporary API rate-limit cooldown locally so automatic lookup remains reliable across service worker restarts.
 
 `tabs`
 Used to detect tab activation and page load completion, and to read the current tab URL so the extension can fetch the Ahrefs Domain Rating for that website.

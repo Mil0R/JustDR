@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Ahrefs Domain Rating Badge",
+  "name": "JustDR - Ahrefs Domain Rating Badge",
   "version": "1.1.0",
   "description": "Click the icon to fetch the current tab's domain rating from Ahrefs and show it in the badge.",
   "permissions": ["contextMenus", "storage", "tabs"],

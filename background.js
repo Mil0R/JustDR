@@ -5,8 +5,11 @@ const LOADING_COLOR = "#888888";
 const ERROR_COLOR = "#b00020";
 const API_BASE = "https://api.ahrefs.com/v3/public/domain-rating-free";
 const CACHE_TTL_MS = 5 * 60 * 1000;
+const REQUEST_INTERVAL_MS = 2 * 1000;
+const RATE_LIMIT_COOLDOWN_MS = 60 * 1000;
 
 const AUTO_FETCH_KEY = "autoFetchEnabled";
+const RATE_LIMIT_KEY = "rateLimitedUntil";
 const AUTO_FETCH_MENU_ID = "toggle-auto-fetch";
 const AUTO_FETCH_MENU_TITLE = "Auto DR";
 
@@ -24,6 +27,17 @@ const API_KEY_STORAGE_KEY = "ahrefsApiKey";
 const ratingCache = new Map();
 const pendingRequests = new Map();
 let contextMenuReadyPromise;
+let requestQueue = Promise.resolve();
+let nextRequestAt = 0;
+let rateLimitedUntil = 0;
+
+class RateLimitError extends Error {
+  constructor(retryAfterMs) {
+    super("Ahrefs API rate limit reached.");
+    this.name = "RateLimitError";
+    this.retryAfterMs = retryAfterMs;
+  }
+}
 
 function setBadge(text, color = DEFAULT_COLOR, tabId) {
   const details = tabId === undefined ? { text } : { text, tabId };
@@ -323,6 +337,11 @@ async function fetchAndDisplayRating(tab) {
       return;
     }
 
+    if (error instanceof RateLimitError) {
+      setBadge("429", ERROR_COLOR, tabId);
+      return;
+    }
+
     setBadge("ERR", ERROR_COLOR, tabId);
     throw error;
   }
@@ -361,7 +380,7 @@ async function getDomainRating(hostname, version = DEFAULT_VERSION) {
     return pending;
   }
 
-  const request = fetchRating(hostname, version)
+  const request = queueRatingRequest(hostname, version)
     .then((rating) => {
       ratingCache.set(cacheKey, {
         rating,
@@ -382,6 +401,32 @@ async function getApiKey() {
   return stored[API_KEY_STORAGE_KEY] || "";
 }
 
+function queueRatingRequest(hostname, version = DEFAULT_VERSION) {
+  const request = requestQueue.then(async () => {
+    const stored = await chrome.storage.local.get(RATE_LIMIT_KEY);
+    const storedRateLimit = stored[RATE_LIMIT_KEY];
+    if (typeof storedRateLimit === "number") {
+      rateLimitedUntil = Math.max(rateLimitedUntil, storedRateLimit);
+    }
+
+    const now = Date.now();
+    if (now < rateLimitedUntil) {
+      throw new RateLimitError(rateLimitedUntil - now);
+    }
+
+    const delay = Math.max(0, nextRequestAt - now);
+    if (delay > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+
+    nextRequestAt = Date.now() + REQUEST_INTERVAL_MS;
+    return fetchRating(hostname, version);
+  });
+
+  requestQueue = request.catch(() => undefined);
+  return request;
+}
+
 async function fetchRating(hostname, version = DEFAULT_VERSION) {
   const endpoint = new URL(API_BASE);
   endpoint.searchParams.set("target", hostname);
@@ -400,10 +445,33 @@ async function fetchRating(hostname, version = DEFAULT_VERSION) {
     headers,
   });
 
+  if (res.status === 429) {
+    const retryAfterMs = parseRetryAfter(res.headers.get("Retry-After"));
+    rateLimitedUntil = Date.now() + retryAfterMs;
+    await chrome.storage.local.set({ [RATE_LIMIT_KEY]: rateLimitedUntil });
+    throw new RateLimitError(retryAfterMs);
+  }
+
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
   const data = await res.json();
   return normalizeRating(data?.domain_rating?.domain_rating);
+}
+
+function parseRetryAfter(value) {
+  if (!value) {
+    return RATE_LIMIT_COOLDOWN_MS;
+  }
+
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return seconds * 1000;
+  }
+
+  const retryAt = Date.parse(value);
+  return Number.isNaN(retryAt)
+    ? RATE_LIMIT_COOLDOWN_MS
+    : Math.max(0, retryAt - Date.now());
 }
 
 function normalizeRating(value) {
@@ -455,6 +523,8 @@ if (typeof module !== "undefined" && module.exports) {
     getCacheKey,
     getDomainRating,
     fetchRating,
+    parseRetryAfter,
+    RateLimitError,
     normalizeRating,
     formatBadgeText,
     scoreColor,
